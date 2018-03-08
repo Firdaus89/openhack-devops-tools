@@ -7,22 +7,39 @@ declare const echarts: any;
   selector: 'ngx-solar',
   styleUrls: ['./solar.component.scss'],
   template: `
-    <nb-card size="xsmall" class="solar-card">
-      <nb-card-header>Solar Energy Consumption</nb-card-header>
-      <nb-card-body>
-        <div echarts [options]="option" class="echart">
-        </div>
-        <div class="info">
-          <div class="value">6. 421 kWh</div>
-          <div class="details"><span>out of</span> 8.421 kWh</div>
-        </div>
-      </nb-card-body>
-    </nb-card>
+  <nb-card size="xsmall" class="solar-card">
+  <nb-card-header>{{teamName}} Status</nb-card-header>
+  <nb-card-body>
+    <div echarts [options]="option" class="echart">
+    </div>
+    <div class="info">
+      <div class="value">{{teamPoint}} points</div>
+      <div class="details"><span>uptime</span> {{teamUptime}} min</div>
+    </div>
+  </nb-card-body>
+</nb-card>
   `,
 })
 export class SolarComponent implements AfterViewInit, OnDestroy {
 
   private value = 0;
+  private teamUptime = 0;
+  private teamPoint = 0;
+  private teamName = "";
+
+  @Input("uptime")
+  set uptime(value: number) {
+    this.teamUptime = value;
+  }
+  @Input("teamName")
+  set name(value: string){
+    this.teamName = value;
+  }
+
+  @Input("point")
+  set point(value: number) {
+    this.teamPoint = value;
+  }
 
   @Input('chartValue')
   set chartValue(value: number) {
