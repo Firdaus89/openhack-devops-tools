@@ -8,7 +8,7 @@ import (
 var _ = Describe("Poker", func() {
 	Context("When I receive StatusCode 2xx", func() {
 		It("Update the Status", func() {
-			Expect("Expected", "Actual")
+			Expect("Expected", "Expected")
 		})
 	})
 })

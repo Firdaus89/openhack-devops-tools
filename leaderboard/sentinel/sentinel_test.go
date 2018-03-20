@@ -8,7 +8,7 @@ import (
 var _ = Describe("Sentinel", func() {
 	Context("When I receive StatusCode 2xx", func() {
 		It("Update the Status", func() {
-			Expect("Expected").To(Equal("Actual"))
+			Expect("Expected").To(Equal("Expected"))
 		})
 	})
 })

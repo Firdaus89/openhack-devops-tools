@@ -2,17 +2,16 @@
 
 
 [[projects]]
+  name = "github.com/google/uuid"
+  packages = ["."]
+  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
+  version = "0.2"
+
+[[projects]]
   name = "github.com/onsi/ginkgo"
   packages = [
     ".",
     "config",
-    "ginkgo",
-    "ginkgo/convert",
-    "ginkgo/interrupthandler",
-    "ginkgo/nodot",
-    "ginkgo/testrunner",
-    "ginkgo/testsuite",
-    "ginkgo/watch",
     "internal/codelocation",
     "internal/containernode",
     "internal/failer",
@@ -101,6 +100,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "73b693c6c23c4a58d39695189493a88fd71d00056a88e25b3a927bd5d7a4ac14"
+  inputs-digest = "6f9a09bb0b5c8f737eabdd1c04fd76bc0ee85ae8cfbacb4e871a5595cc52d3fb"
   solver-name = "gps-cdcl"
   solver-version = 1
