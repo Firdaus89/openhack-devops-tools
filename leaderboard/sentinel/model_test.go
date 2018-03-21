@@ -11,6 +11,30 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+func getTeamWithHistoriesNullSample(statusClient GetStatusClient) *Team {
+	mockClient := statusClient
+
+	aService := Service{
+		Id:         "1",
+		Name:       "A Service",
+		Uri:        "http://aaa.azure.com/health",
+		PokeClient: mockClient,
+	}
+
+	aChallenge := Challenge{
+		Id:        "1",
+		StartDate: time.Date(2019, 1, 9, 23, 59, 59, 0, time.Local),
+	}
+	aTeam := &Team{
+		Id:         "1",
+		Name:       "Team 1",
+		Score:      100,
+		Challenges: &[]Challenge{aChallenge},
+		Services:   &[]Service{aService},
+	}
+	return aTeam
+}
+
 var _ = Describe("Team", func() {
 	Context("Get a current challenge", func() {
 		It("Challenge exists", func() {
@@ -49,30 +73,12 @@ var _ = Describe("Team", func() {
 		Context("History is null", func() {
 			Context("Service is Alive", func() {
 				It("Should write a new history as Alive", func() {
-					mockClient := func(uri string) (*http.Response, error) {
-						return &http.Response{
-							StatusCode: 200,
-						}, nil
-					}
-
-					aService := Service{
-						Id:         "1",
-						Name:       "A Service",
-						Uri:        "http://aaa.azure.com/health",
-						PokeClient: mockClient,
-					}
-
-					aChallenge := Challenge{
-						Id:        "1",
-						StartDate: time.Date(2019, 1, 9, 23, 59, 59, 0, time.Local),
-					}
-					aTeam := &Team{
-						Id:         "1",
-						Name:       "Team 1",
-						Score:      100,
-						Challenges: &[]Challenge{aChallenge},
-						Services:   &[]Service{aService},
-					}
+					aTeam := getTeamWithHistoriesNullSample(
+						func(uri string) (*http.Response, error) {
+							return &http.Response{
+								StatusCode: 200,
+							}, nil
+						})
 					t := time.Now()
 					aTeam.StatusCheck()
 					result := *aTeam.Challenges
