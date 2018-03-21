@@ -100,6 +100,8 @@ func (c *Team) StatusCheck() {
 	for _, s := range *c.Services {
 		s.HealthCheck()
 		lastHistory, hasHistory := challenge.GetLatestHistory(s.Id)
+		// Check if the history exists which is the same Histories.
+		// Insert History if neccessary
 		if hasHistory == true {
 			if statusConverter(s.CurrentStatus) != lastHistory.Status {
 				c.insertNewHistory(challenge.Id, s.Id, statusConverter(s.CurrentStatus), time.Now())
@@ -109,9 +111,6 @@ func (c *Team) StatusCheck() {
 		}
 	}
 
-	// Check if the history exists which is the same Histories.
-
-	// Insert History if neccessary
 }
 
 func (c *Challenge) GetLatestHistory(serviceId string) (*History, bool) {
