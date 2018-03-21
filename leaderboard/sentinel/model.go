@@ -99,9 +99,11 @@ func (c *Team) StatusCheck() {
 	// Loop through Services and Health Check it.
 	for _, s := range *c.Services {
 		s.HealthCheck()
-		_, hasHistory := challenge.GetLatestHistory(s.Id)
+		lastHistory, hasHistory := challenge.GetLatestHistory(s.Id)
 		if hasHistory == true {
-
+			if statusConverter(s.CurrentStatus) != lastHistory.Status {
+				c.insertNewHistory(challenge.Id, s.Id, statusConverter(s.CurrentStatus), time.Now())
+			}
 		} else {
 			c.insertNewHistory(challenge.Id, s.Id, statusConverter(s.CurrentStatus), time.Now())
 		}

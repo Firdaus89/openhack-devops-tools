@@ -35,6 +35,22 @@ func getTeamWithHistoriesNullSample(statusClient GetStatusClient) *Team {
 	return aTeam
 }
 
+func getTeamWithOneHistorySample(historyStatus string, statusClient GetStatusClient) *Team {
+	aTeam := getTeamWithHistoriesNullSample(statusClient)
+	challenges := *aTeam.Challenges
+	newHistories := []History{
+		History{
+			Id:        "1", // Actually, it is UUID for testing
+			ServiceId: "1",
+			Status:    historyStatus,
+			Date:      time.Date(2019, 1, 9, 1, 10, 00, 0, time.Local),
+		},
+	}
+	challenges[0].Histories = &newHistories
+	aTeam.Challenges = &challenges
+	return aTeam
+}
+
 var _ = Describe("Team", func() {
 	Context("Get a current challenge", func() {
 		It("Challenge exists", func() {
@@ -82,16 +98,85 @@ var _ = Describe("Team", func() {
 					t := time.Now()
 					aTeam.StatusCheck()
 					result := *aTeam.Challenges
-					// Expect(result[0].Histories[0].Id).To(Equal("SOME_UUID")) // Skip this for UUID generation
-					Expect((*result[0].Histories)[0].ServiceId).To(Equal("1"))
-					Expect((*result[0].Histories)[0].Status).To(Equal("Alive"))
-					Expect((*result[0].Histories)[0].Date).To(Equal(t))
+					targetHistory := (*result[0].Histories)[0]
+					// Expect(targetHistory.Id).To(Equal("SOME_UUID")) // Skip this for UUID generation
+					Expect(targetHistory.ServiceId).To(Equal("1"))
+					Expect(targetHistory.Status).To(Equal("Alive"))
+					Expect(targetHistory.Date).To(Equal(t))
 
 				})
 			})
 			Context("Service is Dead", func() {
 				It("should write a new history as Dead", func() {
-
+					aTeam := getTeamWithHistoriesNullSample(
+						func(uri string) (*http.Response, error) {
+							return &http.Response{
+								StatusCode: 400,
+							}, nil
+						})
+					aTeam.StatusCheck()
+					result := *aTeam.Challenges
+					targetHistory := (*result[0].Histories)[0]
+					Expect(targetHistory.ServiceId).To(Equal("1"))
+					Expect(targetHistory.Status).To(Equal("Dead"))
+				})
+			})
+		})
+		Context("Has One History", func() {
+			Context("Service is Alive", func() {
+				It("In case History is Alive, this app should do nothing", func() {
+					// Exist History status is Alive, Service health check returns 200
+					aTeam := getTeamWithOneHistorySample("Alive", func(uri string) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 200,
+						}, nil
+					})
+					aTeam.StatusCheck()
+					result := *aTeam.Challenges
+					targetChallenge := result[0]
+					Expect(len(*targetChallenge.Histories)).To(Equal(1))
+				})
+				It("In case History is Dead, this app create a new history", func() {
+					// Exist History status is Dead, Service health check return 200
+					aTeam := getTeamWithOneHistorySample("Dead", func(uri string) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 200,
+						}, nil
+					})
+					aTeam.StatusCheck()
+					result := *aTeam.Challenges
+					targetChallenge := result[0]
+					Expect(len(*targetChallenge.Histories)).To(Equal(2))
+					targetHistory := (*targetChallenge.Histories)[1]
+					Expect(targetHistory.Status).To(Equal("Alive"))
+				})
+			})
+			Context("Service is Dead", func() {
+				It("In case History is Alive, this app create a new history", func() {
+					// Exist History status is Alive, Service health check return 400
+					aTeam := getTeamWithOneHistorySample("Alive", func(uri string) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 400,
+						}, nil
+					})
+					aTeam.StatusCheck()
+					result := *aTeam.Challenges
+					targetChallenge := result[0]
+					Expect(len(*targetChallenge.Histories)).To(Equal(2))
+					targetHistory := (*targetChallenge.Histories)[1]
+					Expect(targetHistory.Status).To(Equal("Dead"))
+				})
+				It("In case History is Dead, this app should do nothing", func() {
+					// Exist History status is Dead, Service health check returns 400
+					aTeam := getTeamWithOneHistorySample("Dead", func(uri string) (*http.Response, error) {
+						return &http.Response{
+							StatusCode: 400,
+						}, nil
+					})
+					aTeam.StatusCheck()
+					result := *aTeam.Challenges
+					targetChallenge := result[0]
+					Expect(len(*targetChallenge.Histories)).To(Equal(1))
 				})
 			})
 		})
