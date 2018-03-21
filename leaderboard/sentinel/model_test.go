@@ -71,15 +71,15 @@ var _ = Describe("Team", func() {
 						Name:       "Team 1",
 						Score:      100,
 						Challenges: &[]Challenge{aChallenge},
-						Services:   []Service{aService},
+						Services:   &[]Service{aService},
 					}
 					t := time.Now()
 					aTeam.StatusCheck()
 					result := *aTeam.Challenges
 					// Expect(result[0].Histories[0].Id).To(Equal("SOME_UUID")) // Skip this for UUID generation
-					Expect(result[0].Histories[0].ServiceId).To(Equal("1"))
-					Expect(result[0].Histories[0].Status).To(Equal("Alive"))
-					Expect(result[0].Histories[0].Date).To(Equal(t))
+					Expect((*result[0].Histories)[0].ServiceId).To(Equal("1"))
+					Expect((*result[0].Histories)[0].Status).To(Equal("Alive"))
+					Expect((*result[0].Histories)[0].Date).To(Equal(t))
 
 				})
 			})
@@ -99,7 +99,7 @@ var _ = Describe("Challenge", func() {
 			_, hasHistory := challenge.GetLatestHistory("1")
 			Expect(hasHistory).To(BeFalse())
 			challenge = &Challenge{
-				Histories: []History{
+				Histories: &[]History{
 					History{
 						Id: "2",
 					},
@@ -112,7 +112,7 @@ var _ = Describe("Challenge", func() {
 	Context("When I have a history for the target service id", func() {
 		It("should return true as hasHistory and also return the History", func() {
 			challenge := &Challenge{
-				Histories: []History{
+				Histories: &[]History{
 					History{
 						Id:        "1",
 						ServiceId: "1",
@@ -127,7 +127,7 @@ var _ = Describe("Challenge", func() {
 	Context("When I have several history for the target service id", func() {
 		It("should return true as hasHistory and also return the History", func() {
 			challenge := &Challenge{
-				Histories: []History{
+				Histories: &[]History{
 					History{
 						Id:        "2",
 						ServiceId: "1",

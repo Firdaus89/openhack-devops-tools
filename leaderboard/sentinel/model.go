@@ -14,7 +14,7 @@ type Team struct {
 	Id         string
 	Name       string
 	Score      int
-	Services   []Service
+	Services   *[]Service
 	Challenges *[]Challenge
 }
 
@@ -22,7 +22,7 @@ type Challenge struct {
 	Id        string
 	StartDate time.Time
 	EndDate   time.Time
-	Histories []History
+	Histories *[]History
 }
 
 type History struct {
@@ -56,14 +56,26 @@ func (c *Team) insertNewHistory(challengeId string, serviceId string, status str
 	for i, v := range newChallenges {
 		if v.Id == challengeId {
 			// insert
+			var newHistories []History
+			if v.Histories == nil {
+				newHistories = []History{
+					History{
+						Id:        uuid.New().String(),
+						ServiceId: serviceId,
+						Status:    status,
+						Date:      date,
+					},
+				}
+			} else {
+				newHistories = append(*v.Histories, History{
+					Id:        uuid.New().String(),
+					ServiceId: serviceId,
+					Status:    status,
+					Date:      date,
+				})
+			}
+			newChallenges[i].Histories = &newHistories
 
-			newHistories := append(v.Histories, History{
-				Id:        uuid.New().String(),
-				ServiceId: serviceId,
-				Status:    status,
-				Date:      date,
-			})
-			newChallenges[i].Histories = newHistories
 		}
 	}
 	c.Challenges = &newChallenges
@@ -85,7 +97,7 @@ func (c *Team) StatusCheck() {
 		return
 	}
 	// Loop through Services and Health Check it.
-	for _, s := range c.Services {
+	for _, s := range *c.Services {
 		s.HealthCheck()
 		_, hasHistory := challenge.GetLatestHistory(s.Id)
 		if hasHistory == true {
@@ -101,12 +113,17 @@ func (c *Team) StatusCheck() {
 }
 
 func (c *Challenge) GetLatestHistory(serviceId string) (*History, bool) {
-	sort.Slice(c.Histories, func(i, j int) bool {
-		return (c.Histories[i].Date.Sub(c.Histories[j].Date) > 0)
+	if c.Histories == nil {
+		return nil, false
+	}
+	sortedHistories := *c.Histories
+	sort.Slice(sortedHistories, func(i, j int) bool {
+		return (sortedHistories[i].Date.Sub(sortedHistories[j].Date) > 0)
 	})
-	for _, v := range c.Histories {
+	c.Histories = &sortedHistories
+	for i, v := range *c.Histories {
 		if v.ServiceId == serviceId {
-			return &v, true
+			return &(*c.Histories)[i], true
 		}
 	}
 	return nil, false
