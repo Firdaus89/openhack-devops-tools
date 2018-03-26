@@ -67,6 +67,6 @@ resource "azurerm_function_app" "test" {
   resource_group_name       = "${azurerm_resource_group.test.name}"
   app_service_plan_id       = "${azurerm_app_service_plan.test.id}"
   storage_connection_string = "${azurerm_storage_account.test.primary_connection_string}"
-
-  depends_on = ["azurerm_storage_account.test", "azurerm_app_service_plan.test"]
+  version                   = "beta"
+  depends_on                = ["azurerm_storage_account.test", "azurerm_app_service_plan.test"]
 }
