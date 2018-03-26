@@ -1,0 +1,34 @@
+#!bin/bash
+
+helm init --upgrade
+
+#Password - 2o18St0ngP@ssw0rd2o18
+
+# This didnt work for now, I overide the configmap with test test
+# test:$apr1$9ViflanT$fN7X9i3CIzsx9JQo/8h4t/
+
+# # traefik.toml
+# logLevel = "INFO"
+# defaultEntryPoints = ["http", "httpn"]
+# [entryPoints]
+#   [entryPoints.http]
+#   address = ":80"
+#   compress = true
+#   [entryPoints.httpn]
+#   address = ":8880"
+#   compress = true
+# [kubernetes]
+# [web]
+# address = ":8080"
+#  [web.auth.basic]
+#   users = ["test:$apr1$9ViflanT$fN7X9i3CIzsx9JQo/8h4t/"] 
+# [web.metrics.prometheus]
+#   Buckets = [0.1,0.3,1.2,5.0]
+
+htpasswd -c ./auth openhackdevopsadmin
+
+kubectl create namespace traefik
+
+kubectl create secret generic traefikdashsecret --from-file auth --namespace=traefik
+
+helm install stable/traefik --name traefik --namespace traefik --values traefikvalues.yaml
