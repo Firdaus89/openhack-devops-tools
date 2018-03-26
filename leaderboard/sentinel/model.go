@@ -28,7 +28,7 @@ type Challenge struct {
 type History struct {
 	Id        string
 	ServiceId string
-	Status    string
+	Status    int
 	Date      time.Time
 }
 
@@ -50,7 +50,7 @@ func (c *Team) GetCurrentChallenge() (*Challenge, error) {
 	return nil, errors.New("Current Challenge not found. Please check the Challenge data which have StartDate but not EndDate")
 }
 
-func (c *Team) insertNewHistory(challengeId string, serviceId string, status string, date time.Time) {
+func (c *Team) insertNewHistory(challengeId string, serviceId string, status int, date time.Time) {
 
 	newChallenges := *c.Challenges
 	for i, v := range newChallenges {
@@ -81,11 +81,11 @@ func (c *Team) insertNewHistory(challengeId string, serviceId string, status str
 	c.Challenges = &newChallenges
 }
 
-func statusConverter(status bool) string {
+func statusConverter(status bool) int {
 	if status == true {
-		return "Alive"
+		return 1
 	} else {
-		return "Dead"
+		return 0
 	}
 }
 

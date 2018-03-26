@@ -35,7 +35,7 @@ func getTeamWithHistoriesNullSample(statusClient GetStatusClient) *Team {
 	return aTeam
 }
 
-func getTeamWithOneHistorySample(historyStatus string, statusClient GetStatusClient) *Team {
+func getTeamWithOneHistorySample(historyStatus int, statusClient GetStatusClient) *Team {
 	aTeam := getTeamWithHistoriesNullSample(statusClient)
 	challenges := *aTeam.Challenges
 	newHistories := []History{
@@ -88,7 +88,7 @@ var _ = Describe("Team", func() {
 	Context("When the team has One Challenge", func() {
 		Context("History is null", func() {
 			Context("Service is Alive", func() {
-				It("Should write a new history as Alive", func() {
+				It("Should write a new history as Alive(1)", func() {
 					aTeam := getTeamWithHistoriesNullSample(
 						func(uri string) (*http.Response, error) {
 							return &http.Response{
@@ -101,13 +101,13 @@ var _ = Describe("Team", func() {
 					targetHistory := (*result[0].Histories)[0]
 					// Expect(targetHistory.Id).To(Equal("SOME_UUID")) // Skip this for UUID generation
 					Expect(targetHistory.ServiceId).To(Equal("1"))
-					Expect(targetHistory.Status).To(Equal("Alive"))
+					Expect(targetHistory.Status).To(Equal(1))
 					Expect(targetHistory.Date).To(Equal(t))
 
 				})
 			})
 			Context("Service is Dead", func() {
-				It("should write a new history as Dead", func() {
+				It("should write a new history as Dead(0)", func() {
 					aTeam := getTeamWithHistoriesNullSample(
 						func(uri string) (*http.Response, error) {
 							return &http.Response{
@@ -118,15 +118,15 @@ var _ = Describe("Team", func() {
 					result := *aTeam.Challenges
 					targetHistory := (*result[0].Histories)[0]
 					Expect(targetHistory.ServiceId).To(Equal("1"))
-					Expect(targetHistory.Status).To(Equal("Dead"))
+					Expect(targetHistory.Status).To(Equal(0))
 				})
 			})
 		})
 		Context("Has One History", func() {
 			Context("Service is Alive", func() {
-				It("In case History is Alive, this app should do nothing", func() {
+				It("In case History is Alive(1), this app should do nothing", func() {
 					// Exist History status is Alive, Service health check returns 200
-					aTeam := getTeamWithOneHistorySample("Alive", func(uri string) (*http.Response, error) {
+					aTeam := getTeamWithOneHistorySample(1, func(uri string) (*http.Response, error) {
 						return &http.Response{
 							StatusCode: 200,
 						}, nil
@@ -136,9 +136,9 @@ var _ = Describe("Team", func() {
 					targetChallenge := result[0]
 					Expect(len(*targetChallenge.Histories)).To(Equal(1))
 				})
-				It("In case History is Dead, this app create a new history", func() {
+				It("In case History is Dead(0), this app create a new history", func() {
 					// Exist History status is Dead, Service health check return 200
-					aTeam := getTeamWithOneHistorySample("Dead", func(uri string) (*http.Response, error) {
+					aTeam := getTeamWithOneHistorySample(0, func(uri string) (*http.Response, error) {
 						return &http.Response{
 							StatusCode: 200,
 						}, nil
@@ -148,13 +148,13 @@ var _ = Describe("Team", func() {
 					targetChallenge := result[0]
 					Expect(len(*targetChallenge.Histories)).To(Equal(2))
 					targetHistory := (*targetChallenge.Histories)[1]
-					Expect(targetHistory.Status).To(Equal("Alive"))
+					Expect(targetHistory.Status).To(Equal(1))
 				})
 			})
 			Context("Service is Dead", func() {
-				It("In case History is Alive, this app create a new history", func() {
+				It("In case History is Alive(1), this app create a new history", func() {
 					// Exist History status is Alive, Service health check return 400
-					aTeam := getTeamWithOneHistorySample("Alive", func(uri string) (*http.Response, error) {
+					aTeam := getTeamWithOneHistorySample(1, func(uri string) (*http.Response, error) {
 						return &http.Response{
 							StatusCode: 400,
 						}, nil
@@ -164,11 +164,11 @@ var _ = Describe("Team", func() {
 					targetChallenge := result[0]
 					Expect(len(*targetChallenge.Histories)).To(Equal(2))
 					targetHistory := (*targetChallenge.Histories)[1]
-					Expect(targetHistory.Status).To(Equal("Dead"))
+					Expect(targetHistory.Status).To(Equal(0))
 				})
-				It("In case History is Dead, this app should do nothing", func() {
+				It("In case History is Dead(0), this app should do nothing", func() {
 					// Exist History status is Dead, Service health check returns 400
-					aTeam := getTeamWithOneHistorySample("Dead", func(uri string) (*http.Response, error) {
+					aTeam := getTeamWithOneHistorySample(0, func(uri string) (*http.Response, error) {
 						return &http.Response{
 							StatusCode: 400,
 						}, nil
