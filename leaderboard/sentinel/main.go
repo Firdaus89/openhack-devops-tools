@@ -2,17 +2,56 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"time"
-)
 
-type Person struct {
-	Name  string
-	Phone string
-}
+	"github.com/urfave/cli"
+)
 
 // If an defacto environment has not been set, cause an error with some messages.
 func main() {
+	app := cli.NewApp()
+	app.Name = "Sentinel"
+	app.Usage = "Status checking tool for OpenHack - DevOps"
+	//	app.UsageText = "This is the usage text" // default will be nice
+	app.Version = "0.0.1"
+	app.Commands = []cli.Command{
+		{
+			Name:    "init",
+			Aliases: []string{"i"},
+			Usage:   "Initialize Sentinel. Insert initial Data for an Open Hack",
+			Action: func(c *cli.Context) error {
+				fmt.Println("***** I do initialize!")
+				Initialize(c.Bool("t"))
+				return nil
+			},
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "template, t",
+					Usage: "Initialize template data set for Testing",
+				},
+			},
+		},
+		{
+			Name:    "start",
+			Aliases: []string{"s"},
+			Usage:   "Start Sentinel App and monitor the endpoint",
+			Action: func(c *cli.Context) error {
+				StartJobs()
+				return nil
+			},
+		},
+	}
+	app.Run(os.Args)
+}
 
+// Initialize initialize the Database settings. If the template is true, it inserts template data for testing.
+func Initialize(template bool) {
+
+}
+
+// StartJobs start Sentinel orchestration jobs
+func StartJobs() {
 	// Iterate an Call of the orchestrator
 
 	// session, err := mgo.Dial("localhost")
@@ -34,9 +73,9 @@ func main() {
 	// 	log.Fatal(err)
 	// }
 	// fmt.Print("Phone:", result.Phone)
-
 	fmt.Println("Sentinel - Health check daemon for the DevOps - OpenHack")
-	ticker := time.NewTicker(5 * time.Second)
+
+	ticker := time.NewTicker(10 * time.Second)
 	go func() {
 		for t := range ticker.C {
 			RunAllPokers()

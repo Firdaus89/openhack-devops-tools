@@ -7,11 +7,12 @@ import (
 	"sort"
 	"time"
 
+	documentdb "github.com/TsuyoshiUshio/documentdb-go"
 	"github.com/google/uuid"
 )
 
 type Team struct {
-	Id         string
+	documentdb.Document
 	Name       string
 	Score      int
 	Services   *[]Service
@@ -22,6 +23,7 @@ type Challenge struct {
 	Id        string
 	StartDate time.Time
 	EndDate   time.Time
+	//	Status    string     // Wait for the spec
 	Histories *[]History
 }
 
@@ -128,6 +130,11 @@ func (c *Challenge) GetLatestHistory(serviceId string) (*History, bool) {
 		}
 	}
 	return nil, false
+}
+
+// UpdateStatus get the status from GetLatestHistory then reflect the result to the Challenge.Status
+func (c *Challenge) UpdateStatus() {
+
 }
 
 type GetStatusClient func(uri string) (*http.Response, error)

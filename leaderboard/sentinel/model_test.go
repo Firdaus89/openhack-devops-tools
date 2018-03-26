@@ -26,7 +26,6 @@ func getTeamWithHistoriesNullSample(statusClient GetStatusClient) *Team {
 		StartDate: time.Date(2019, 1, 9, 23, 59, 59, 0, time.Local),
 	}
 	aTeam := &Team{
-		Id:         "1",
 		Name:       "Team 1",
 		Score:      100,
 		Challenges: &[]Challenge{aChallenge},
@@ -236,6 +235,31 @@ var _ = Describe("Challenge", func() {
 			Expect(history.Id).To(Equal("1"))
 		})
 	})
+	// Context("When I ask the status", func() { // Wait for the spec of Challenge.Status
+	// 	It("should return true if the latest history is Alive", func() {
+	// 		challenge := &Challenge{
+	// 			Histories: &[]History{
+	// 				History{
+	// 					Id:        "2",
+	// 					ServiceId: "1",
+	// 					Status:    0,
+	// 					Date:      time.Date(2019, 1, 9, 1, 10, 00, 0, time.Local),
+	// 				},
+	// 				History{
+	// 					Id:        "1",
+	// 					ServiceId: "1",
+	// 					Status:    1,
+	// 					Date:      time.Date(2019, 1, 9, 1, 10, 10, 0, time.Local),
+	// 				},
+	// 			},
+	// 		}
+	// 		challenge.UpdateStatus()
+	// 		Expect(challenge.Status).To(Equal("Alive"))
+	// 	})
+	// 	It("should return false if the latest history is Dead", func() {
+
+	// 	})
+	// })
 })
 
 var _ = Describe("Service", func() {

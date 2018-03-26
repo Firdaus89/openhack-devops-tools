@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  branch = "feature/upsert"
+  name = "github.com/TsuyoshiUshio/documentdb-go"
+  packages = ["."]
+  revision = "9f9d26f7ecd24aedd8556a238f7e33c946e24b36"
+
+[[projects]]
   name = "github.com/google/uuid"
   packages = ["."]
   revision = "064e2069ce9c359c118179501254f67d7d37ba24"
@@ -52,6 +58,12 @@
   version = "v1.3.0"
 
 [[projects]]
+  name = "github.com/urfave/cli"
+  packages = ["."]
+  revision = "cfb38830724cc34fedffe9a2a29fb54fa9169cd1"
+  version = "v1.20.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -100,6 +112,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6f9a09bb0b5c8f737eabdd1c04fd76bc0ee85ae8cfbacb4e871a5595cc52d3fb"
+  inputs-digest = "96c64ace1ff24274b7ff63b0d19197b670c9e628f641845cc3299f9bec2f7a10"
   solver-name = "gps-cdcl"
   solver-version = 1
