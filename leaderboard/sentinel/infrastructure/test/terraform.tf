@@ -61,6 +61,13 @@ resource "azurerm_app_service_plan" "test" {
   depends_on = ["azurerm_resource_group.test"]
 }
 
+resource "azurerm_application_insights" "test" {
+  name                = "${var.function_app_name}-appinsights"
+  location            = "eastus"
+  resource_group_name = "${azurerm_resource_group.test.name}"
+  application_type    = "Web"
+}
+
 resource "azurerm_function_app" "test" {
   name                      = "${var.function_app_name}"
   location                  = "${azurerm_resource_group.test.location}"
@@ -68,5 +75,15 @@ resource "azurerm_function_app" "test" {
   app_service_plan_id       = "${azurerm_app_service_plan.test.id}"
   storage_connection_string = "${azurerm_storage_account.test.primary_connection_string}"
   version                   = "beta"
-  depends_on                = ["azurerm_storage_account.test", "azurerm_app_service_plan.test"]
+
+  app_settings {
+    //  WEBSITE_USE_ZIP                = "https://github.com/TsuyoshiUshio/EndPoint/releases/download/0.0.1/endpoint.zip" // Currently doesn't work for the known issue.
+    APPINSIGHTS_INSTRUMENTATIONKEY = "${azurerm_application_insights.test.instrumentation_key}"
+  }
+
+  provisioner "local-exec" {
+    command = "az functionapp deployment source config-zip -g ${azurerm_resource_group.test.name} -n ${var.function_app_name} --src ./endpoint.zip"
+  }
+
+  depends_on = ["azurerm_storage_account.test", "azurerm_app_service_plan.test", "azurerm_application_insights.test"]
 }
