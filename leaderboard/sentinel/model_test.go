@@ -103,6 +103,9 @@ var _ = Describe("Team", func() {
 					Expect(targetHistory.Status).To(Equal(1))
 					Expect(targetHistory.Date).To(Equal(t))
 
+					service := *aTeam.Services
+					Expect(service[0].CurrentStatus).To(BeTrue())
+
 				})
 			})
 			Context("Service is Dead", func() {
@@ -118,6 +121,9 @@ var _ = Describe("Team", func() {
 					targetHistory := (*result[0].Histories)[0]
 					Expect(targetHistory.ServiceId).To(Equal("1"))
 					Expect(targetHistory.Status).To(Equal(0))
+
+					service := *aTeam.Services
+					Expect(service[0].CurrentStatus).To(BeFalse())
 				})
 			})
 		})

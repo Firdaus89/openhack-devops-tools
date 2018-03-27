@@ -52,16 +52,19 @@ func (t *TeamDB) GetAll() (teams *[]Team, err error) {
 	err = t.client.ReadDocuments(t.coll.Self, &teams)
 	return
 }
+func (t *TeamDB) RemoveDB() error {
+	return t.client.DeleteDatabase(t.db.Self)
+}
 
 // Create team
-func (u *TeamDB) Add(team *Team) (err error) {
+func (t *TeamDB) Add(team *Team) (err error) {
 	jsonbytes, err := json.Marshal(*team)
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println("--------")
 	fmt.Println(string(jsonbytes))
-	err = u.client.UpsertDocument(u.coll.Self, team)
+	err = t.client.UpsertDocument(t.coll.Self, team)
 	if err != nil {
 		// Currently, If you use Upsert, we've got and error with it's body as "
 		// It is because the Status Code is not match 200 vs 201. However it's OK
@@ -74,33 +77,33 @@ func (u *TeamDB) Add(team *Team) (err error) {
 }
 
 // Find or create collection by id
-func (u *TeamDB) findOrCreateCollection(name string) (err error) {
-	if colls, err := u.client.QueryCollections(u.db.Self, fmt.Sprintf("SELECT * FROM ROOT r WHERE r.id='%s'", name)); err != nil {
+func (t *TeamDB) findOrCreateCollection(name string) (err error) {
+	if colls, err := t.client.QueryCollections(t.db.Self, fmt.Sprintf("SELECT * FROM ROOT r WHERE r.id='%s'", name)); err != nil {
 		return err
 	} else if len(colls) == 0 {
-		if coll, err := u.client.CreateCollection(u.db.Self, fmt.Sprintf(`{ "id": "%s" }`, name)); err != nil {
+		if coll, err := t.client.CreateCollection(t.db.Self, fmt.Sprintf(`{ "id": "%s" }`, name)); err != nil {
 			return err
 		} else {
-			u.coll = coll
+			t.coll = coll
 		}
 	} else {
-		u.coll = &colls[0]
+		t.coll = &colls[0]
 	}
 	return
 }
 
 // Find or create database by id
-func (u *TeamDB) findOrDatabase(name string) (err error) {
-	if dbs, err := u.client.QueryDatabases(fmt.Sprintf("SELECT * FROM ROOT r WHERE r.id='%s'", name)); err != nil {
+func (t *TeamDB) findOrDatabase(name string) (err error) {
+	if dbs, err := t.client.QueryDatabases(fmt.Sprintf("SELECT * FROM ROOT r WHERE r.id='%s'", name)); err != nil {
 		return err
 	} else if len(dbs) == 0 {
-		if db, err := u.client.CreateDatabase(fmt.Sprintf(`{ "id": "%s" }`, name)); err != nil {
+		if db, err := t.client.CreateDatabase(fmt.Sprintf(`{ "id": "%s" }`, name)); err != nil {
 			return err
 		} else {
-			u.db = db
+			t.db = db
 		}
 	} else {
-		u.db = &dbs[0]
+		t.db = &dbs[0]
 	}
 	return
 }

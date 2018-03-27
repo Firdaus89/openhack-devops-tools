@@ -42,12 +42,17 @@ func main() {
 			},
 		},
 	}
-	app.Run(os.Args)
+	a := os.Args
+	app.Run(a)
 }
 
 // Initialize initialize the Database settings. If the template is true, it inserts template data for testing.
 func Initialize(template bool) {
-
+	if template {
+		SetUpSampleTemplate()
+	} else {
+		SetupTemplate()
+	}
 }
 
 // StartJobs start Sentinel orchestration jobs
@@ -75,11 +80,11 @@ func StartJobs() {
 	// fmt.Print("Phone:", result.Phone)
 	fmt.Println("Sentinel - Health check daemon for the DevOps - OpenHack")
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	go func() {
 		for t := range ticker.C {
+			fmt.Println("********* Tick at", t)
 			RunAllPokers()
-			fmt.Println("Tick at", t)
 		}
 	}()
 	time.Sleep(30 * time.Second)

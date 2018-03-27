@@ -39,7 +39,7 @@ type Service struct {
 	Name          string
 	Uri           string
 	CurrentStatus bool
-	PokeClient    GetStatusClient
+	PokeClient    GetStatusClient `json:"-"`
 }
 
 func (c *Team) GetCurrentChallenge() (*Challenge, error) {
@@ -99,8 +99,9 @@ func (c *Team) StatusCheck() {
 		return
 	}
 	// Loop through Services and Health Check it.
-	for _, s := range *c.Services {
-		s.HealthCheck()
+	for i, s := range *c.Services {
+		// refrect to the services
+		(*c.Services)[i].CurrentStatus = s.HealthCheck()
 		lastHistory, hasHistory := challenge.GetLatestHistory(s.Id)
 		// Check if the history exists which is the same Histories.
 		// Insert History if neccessary
@@ -140,6 +141,10 @@ func (c *Challenge) UpdateStatus() {
 type GetStatusClient func(uri string) (*http.Response, error)
 
 func (c *Service) HealthCheck() bool {
+	// If the PokeClient is nil, it need an implementation
+	if c.PokeClient == nil {
+		c.PokeClient = RestGetClientImpl
+	}
 	resp, err := c.PokeClient(c.Uri)
 	c.CurrentStatus = false
 	if err != nil {
