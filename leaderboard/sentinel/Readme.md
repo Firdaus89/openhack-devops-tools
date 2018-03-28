@@ -47,3 +47,39 @@ SENTINEL_MONGO_PASSWORD="Azure database connect password from Azure Portal"
 ```
 
 For more detail, please refer [Azure Cosmos DB: Build a MongoDB API console app with Golang and the Azure portal](https://docs.microsoft.com/ja-jp/azure/cosmos-db/create-mongodb-golang)
+
+# Development
+
+This repo requires these tools.
+
+* [golang](https://golang.org/)
+* [golang/dep](https://github.com/golang/dep)
+
+
+# Restore Packages
+
+After setting the GOPATH, then you can try
+
+```
+dep ensure
+```
+
+# Build
+
+```
+go build
+```
+
+# Run
+
+```
+go run main.go
+```
+
+or
+
+```
+./sentinel.exe
+```
+
+
