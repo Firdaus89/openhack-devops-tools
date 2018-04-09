@@ -113,5 +113,9 @@ func report(cfg *config, log *Log) (*http.Response, error) {
 
 func HelathCheck(cfg *config) (int, error) {
 	res, err := http.Get((*cfg).Endpoint)
-	return res.StatusCode, err
+	if res != nil {
+		return res.StatusCode, err
+	} else {
+		return 0, err
+	}
 }
