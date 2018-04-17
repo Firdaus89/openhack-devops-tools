@@ -76,11 +76,15 @@
                 },
                 "name": "[parameters('functionName')]",
                 "clientAffinityEnabled": false,
+                "alwaysOn": true,
                 "serverFarmId": "[concat('/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]",
                 "hostingEnvironment": "[parameters('hostingEnvironment')]"
             },
             "apiVersion": "2016-03-01",
             "location": "[parameters('location')]",
+            "identity": {
+                "type": "SystemAssigned"
+            },
             "tags": {
                 "[concat('hidden-related:', '/subscriptions/', parameters('subscriptionId'),'/resourcegroups/', parameters('serverFarmResourceGroup'), '/providers/Microsoft.Web/serverfarms/', parameters('hostingPlanName'))]": "empty"
             },

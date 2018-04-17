@@ -2,7 +2,8 @@ Param(
     [string] [Parameter(Mandatory=$true)] $ResourceGroupName,
     [string] [Parameter(Mandatory=$true)] $Location,
     [string] [Parameter(Mandatory=$true)] $CosmosdbAccountName,
-    [string] [Parameter(Mandatory=$true)] $FunctionAppBaseName
+    [string] [Parameter(Mandatory=$true)] $FunctionAppBaseName,
+    [string] [parameter(Mandatory=$true)] $KeyVaultName
 )
 
 # NOTE: Since this script works on the VSTS, I skip the login script.
@@ -61,7 +62,8 @@ New-AzureRmResource -ResourceType "Microsoft.DocumentDb/databaseAccounts"`
                     -ResourceGroupName $ResourceGroupName `
                     -Location $Location `
                     -Name $CosmosdbAccountName `
-                    -Properties $DBProperties
+                    -Properties $DBProperties `
+                    -Force
 
 ## Retrive CosmosDB ConnectionString
 $cosmosPrimaryKey = Get-PrimaryKey -DocumentDBApi "2015-04-08" -ResourceGroupName $ResourceGroupName -CosmosdbAccountName $CosmosdbAccountName
@@ -75,8 +77,64 @@ $hostingPlanName = $FunctionAppBaseName + "Plan"
 
 $random = Get-Random -minimum 1000000 -maximum 9999999;([String]$random).SubString(1,6)
 $storageName = $FunctionAppBaseName + $random
+
+# Install Newton to handle json
+# You need Admin Priviledge
+
+$module = import-module newtonsoft.json -ErrorAction SilentlyContinue -PassThru
+if(!$module)
+{
+    Write-Output "installing newtonsoft.json"
+    Install-Module newtonsoft.json -Scope CurrentUser -Force
+    import-module newtonsoft.json
+}
+
 New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosConnectionString $cosmosDBConnectionString
 
+# Get the Principal Id and Tenant Id
+
+# If we can't use the Preview Release, this staretgy comes.
+# Export-AzureRmResourceGroup -ResourceGroupName $ResourceGroupName -Path "$pwd\.current.json"
+
+# It requires Preview Release of WebSites
+# https://github.com/Azure/azure-powershell/issues/4808
+# With Admin priviledge
+
+$module = import-module AzureRM.Websites -ErrorAction SilentlyContinue -PassThru
+if(!$module)
+{
+    Write-Output "Installing AzureRM.Websites"
+    Install-Module AzureRM.Websites -Repository PSGallery -AllowPrerelease -Force
+}
+
+$app = Get-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName
 
 
+# Create a Azure KeyVault
 
+# Set some Secrets
+
+$keyvault = New-AzureRmKeyVault -Name $KeyVaultName -ResourceGroupName $ResourceGroupName -Location $Location
+
+# Add Service Principal To the KeyVault
+
+# If I doesn't stop in here, sometimes, we can't refer the ObjectId
+Write-Output "Waiting for Service Principal is generated..."
+Start-Sleep -Seconds 30
+
+Set-AzureRmKeyVaultAccessPolicy -VaultName $KeyVaultName -ObjectId $app.Identity.PrincipalId -PermissionsToSecrets Get
+
+# Upload Secrets
+
+$cosmosDBConnectionStringSecretValue = ConvertTo-SecureString $cosmosDBConnectionString -AsPlainText -Force
+$cosmosDBConnectionStringSecret = Set-AzureKeyVaultSecret -VaultName $KeyVaultName -Name 'shared-cosmosDB-ConnectionString' -SecretValue $cosmosDBConnectionStringSecretValue
+
+# Set KeyVault URl 
+
+$appSettings = @{
+    "KeyVaultHost" = $KeyVault.VaultUri
+}
+
+Set-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName -AppSettings $appSettings
+
+Write-Output "Done! Please refer " + $ResourceGroupName + " On your subscription"
