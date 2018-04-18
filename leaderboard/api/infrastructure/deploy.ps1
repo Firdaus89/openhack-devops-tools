@@ -89,7 +89,10 @@ if(!$module)
     import-module newtonsoft.json
 }
 
-New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosConnectionString $cosmosDBConnectionString
+# compose KeyVault url
+$keyVaultUrl = "https://" + $KeyVaultName + ".vault.azure.net"
+
+New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosConnectionString $cosmosDBConnectionString -keyVaultUrl $keyVaultUrl
 
 # Get the Principal Id and Tenant Id
 
@@ -131,10 +134,22 @@ $cosmosDBConnectionStringSecret = Set-AzureKeyVaultSecret -VaultName $KeyVaultNa
 
 # Set KeyVault URl 
 
-$appSettings = @{
-    "KeyVaultHost" = $KeyVault.VaultUri
-}
-
-Set-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName -AppSettings $appSettings
-
-Write-Output "Done! Please refer " + $ResourceGroupName + " On your subscription"
+# These logic for Set KeyVault URL doesn't work. 
+# I set the KeyVault URL at the ARM tempate section instead. 
+# When I solve this problem, I'll back to this logic.
+#
+# $webApp = Get-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName 
+#$appSettingList = $webApp.SiteConfig.AppSettings
+#
+#$appSettings = @{}
+#
+#ForEach ($kvp in $appSettingList) {
+#    $appSettings[$kvp.Name] = $kvp.Value
+#}
+#
+#$appSettings["KeyVaultUri"] = $keyvault.VaultUri
+#
+#$res = Set-AzureRmWebApp -AppSettings $appSettings -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName 
+#
+$message =  "Done! Please refer " + $ResourceGroupName + " On your subscription"
+Write-Output $message

@@ -33,6 +33,9 @@
         },
         "cosmosConnectionString": {
             "type": "string"
+        },
+        "keyVaultUrl": {
+            "type": "string"
         }
     },
     "resources": [
@@ -70,6 +73,10 @@
                         {
                             "name": "COSMOS_CONNECTION_STRING",
                             "value": "[parameters('cosmosConnectionString')]"
+                        },
+                        {
+                            "name": "KEYVAULT_URL",
+                            "value": "[parameters('keyVaultUrl')]"
                         }
                     ],
                     "alwaysOn": true
