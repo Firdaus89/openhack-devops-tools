@@ -212,9 +212,9 @@ Write-Output "******************************************************************
 
 $AKSPublicKey = Get-Content -Path $AKSPublicKeyPath
 $secureStringPublicKey = ConvertTo-SecureString -String $AKSPublicKey -AsPlainText -Force
-$secureStringServicePrincipalId = ConvertTo-SecureString -string $ADApplication.ApplicationId.ToString -AsPlainText -Force
+$secureStringServicePrincipalId = ConvertTo-SecureString -string $ADApplication.ApplicationId -AsPlainText -Force
 $secureStringServicePrincipalPass = ConvertTo-SecureString -string $ADAppPass -AsPlainText -Force
-$result = New-AzureRmResourceGroupDeployment -Name LeaderBoardAKSDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/aks.json -dnsNamePrefix $AKSDnsNamePrefix -sshRSAPublicKey $secureStringPublicKey -servicePrincipalClientId $secureStringServicePrincipalId -servicePrincipalClientSecret $secureStringServicePrincipalPass  -DeploymentDebugLogLevel All
+$result = New-AzureRmResourceGroupDeployment -Name LeaderBoardAKSDeployment -ResourceGroup $ResourceGroupName -Templatefile .\scripts\aks.json -dnsNamePrefix $AKSDnsNamePrefix -sshRSAPublicKey $secureStringPublicKey -servicePrincipalClientId $secureStringServicePrincipalId -servicePrincipalClientSecret $secureStringServicePrincipalPass  -DeploymentDebugLogLevel All
 
 # Create an ACR
 Write-Output ""
