@@ -3,7 +3,12 @@ Param(
     [string] [Parameter(Mandatory=$true)] $Location,
     [string] [Parameter(Mandatory=$true)] $CosmosdbAccountName,
     [string] [Parameter(Mandatory=$true)] $FunctionAppBaseName,
-    [string] [parameter(Mandatory=$true)] $KeyVaultName
+    [string] [parameter(Mandatory=$true)] $KeyVaultName,
+    [string] [parameter(Mandatory=$true)] $ADAppName,
+    [string] [parameter(Mandatory=$true)] $ADAppPass,
+    [string] [parameter(Mandatory=$true)] $AKSPublicKeyPath,
+    [string] [parameter(Mandatory=$true)] $AKSDnsNamePrefix,
+    [string] [parameter(Mandatory=$true)] $ACRName
 )
 
 # NOTE: Since this script works on the VSTS, I skip the login script.
@@ -169,5 +174,55 @@ $cosmosDBConnectionStringSecret = Set-AzureKeyVaultSecret -VaultName $KeyVaultNa
 #
 #$res = Set-AzureRmWebApp -AppSettings $appSettings -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName 
 #
+
+# Create a Service Principal with Application
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning a Service Principal for the AKS Cluster..."
+Write-Output "**************************************************************************************************"
+
+$IdentifierUris = "http://" + $ADAppName
+
+$secureStringPassword = ConvertTo-SecureString -String $ADAppPass -AsPlainText -Force
+#$ADApplication = New-AzureRmADApplication -DisplayName $ADAppName -HomePage "http://www.microsoft.com" -IdentifierUris $IdentifierUris -Password $secureStringPassword
+#Add-Type -AssemblyName System.Web
+#$password = [System.Web.Security.Membership]::GeneratePassword(16,3)
+#$servicePrincipal = New-AzureRmADServicePrincipal -ApplicationId $ADApplication.ApplicationId -Password $password
+
+$servicePrincipal = New-AzureRmADServicePrincipal -DisplayName $ADAppName -Password $secureStringPassword
+$ADApplication = Get-AzureRmADApplication -ApplicationId $servicePrincipal.ApplicationId
+
+Write-Output $servicePrincipal
+
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Assinging Contributor role for the Resource Group..."
+Write-Output "**************************************************************************************************"
+
+Write-Output "Waiting for Service Principal is generated..."
+Start-Sleep -Seconds 30
+New-AzureRmRoleAssignment -ResourceGroupName $ResourceGroupName -ObjectId $servicePrincipal.Id -RoleDefinitionName Contributor
+
+
+# Create an AKS
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning the AKS Cluster..."
+Write-Output "**************************************************************************************************"
+
+$AKSPublicKey = Get-Content -Path $AKSPublicKeyPath
+$secureStringPublicKey = ConvertTo-SecureString -String $AKSPublicKey -AsPlainText -Force
+$secureStringServicePrincipalId = ConvertTo-SecureString -string $ADApplication.ApplicationId.ToString -AsPlainText -Force
+$secureStringServicePrincipalPass = ConvertTo-SecureString -string $ADAppPass -AsPlainText -Force
+$result = New-AzureRmResourceGroupDeployment -Name LeaderBoardAKSDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/aks.json -dnsNamePrefix $AKSDnsNamePrefix -sshRSAPublicKey $secureStringPublicKey -servicePrincipalClientId $secureStringServicePrincipalId -servicePrincipalClientSecret $secureStringServicePrincipalPass  -DeploymentDebugLogLevel All
+
+# Create an ACR
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning the ACR..."
+Write-Output "**************************************************************************************************"
+
+New-AzureRmResourceGroupDeployment -Name LeaderBoardACRDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/acr.json -acrName $ACRName 
+
 $message =  "Done! Please refer " + $ResourceGroupName + " On your subscription"
 Write-Output $message
