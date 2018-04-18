@@ -9,7 +9,12 @@ Param(
 # NOTE: Since this script works on the VSTS, I skip the login script.
 # Login-AzureRmAccount
 
-# Create a ResourceGroup
+# Create or update the resource group using the specified template file and template parameters file
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Creating the resource group..."
+Write-Output "**************************************************************************************************"
+
 Get-AzureRmResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
 if(!$notPresent)
@@ -19,7 +24,11 @@ if(!$notPresent)
 
 New-AzureRmResourceGroup -Name $ResourceGroupName -Location $Location -Force
 
-# Create a CosmosDB
+# Creating CosmosDB
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Creating a CosmosDB..."
+Write-Output "**************************************************************************************************"
 
 Function Get-PrimaryKey
 {
@@ -70,7 +79,12 @@ $cosmosPrimaryKey = Get-PrimaryKey -DocumentDBApi "2015-04-08" -ResourceGroupNam
 $cosmosDBConnectionString = "AccountEndpoint=https://" + $CosmosdbAccountName + ".documents.azure.com:443/;AccountKey=" + $cosmosPrimaryKey + ";"
 
 # Create a Function App with Function App V2
+# This ARM temaplate create Azure Functions with a Service Principal to access the KeyVault.
 # Set AppSettings to the Function App
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning Azure Functions (v2)..."
+Write-Output "**************************************************************************************************"
 
 $currentSubscriptionId = (Get-AzureRmContext).Subscription.Id
 $hostingPlanName = $FunctionAppBaseName + "Plan"
@@ -113,7 +127,11 @@ if(!$module)
 $app = Get-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $FunctionAppBaseName
 
 
-# Create a Azure KeyVault
+# Create and Configure KeyVault
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning the KeyVault with CosmosDB ConnectionString ..."
+Write-Output "**************************************************************************************************"
 
 # Set some Secrets
 
