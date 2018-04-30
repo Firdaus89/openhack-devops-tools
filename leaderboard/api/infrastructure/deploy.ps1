@@ -8,7 +8,10 @@ Param(
     [string] [parameter(Mandatory=$true)] $ADAppPass,
     [string] [parameter(Mandatory=$true)] $AKSPublicKeyPath,
     [string] [parameter(Mandatory=$true)] $AKSDnsNamePrefix,
-    [string] [parameter(Mandatory=$true)] $ACRName
+    [string] [parameter(Mandatory=$true)] $ACRName,
+    [string] [parameter(Mandatory=$true)] $ProctorVMHostName,
+    [string] [parameter(Mandatory=$true)] $AdminUser,
+    [string] [parameter(Mandatory=$true)] $AdminPassword
 )
 
 # NOTE: Since this script works on the VSTS, I skip the login script.
@@ -222,7 +225,20 @@ Write-Output "******************************************************************
 Write-Output "* Provisioning the ACR..."
 Write-Output "**************************************************************************************************"
 
-New-AzureRmResourceGroupDeployment -Name LeaderBoardACRDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/acr.json -acrName $ACRName 
+New-AzureRmResourceGroupDeployment -Name LeaderBoardACRDeployment -ResourceGroup $ResourceGroupName -Templatefile .\scripts\acr.json -acrName $ACRName 
 
 $message =  "Done! Please refer " + $ResourceGroupName + " On your subscription"
 Write-Output $message
+
+
+# Create a Proctor VM
+
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning the Proctor VM..."
+Write-Output "**************************************************************************************************"
+
+$vmStorageName = $ProctorVMHostName + $random
+New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Location $Location -SkuName Standard_LRS -Kind Storage
+
+New-AzureRmResourceGroupDeployment -Name ProctorVMDeployment -ResourceGroup $ResourceGroupName -Templatefile .\scripts\proctor.json -StorageAccountName $vmStorageName -adminUsername $AdminUser -adminPassword $AdminPassword -dnsNameForPublicIP $ProctorVMHostName -ubuntuOSVersion "16.04.0-LTS"
