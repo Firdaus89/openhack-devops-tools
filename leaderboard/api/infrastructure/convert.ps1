@@ -55,7 +55,7 @@ $expand = Invoke-Expression "@`"`r`n$template`r`n`"@"
 Write-Host $expand
 Write-Host ""
 
-$expand | Out-File '..\..\sentinel\values.yaml' -Encoding UTF8
+$expand | Out-File '..\..\sentinel\chart\values.yaml' -Encoding UTF8
 
 # Write-Host "..\..\sentinel\values.yaml has been generated"
 # 
