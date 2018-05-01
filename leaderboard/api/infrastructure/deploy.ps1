@@ -263,7 +263,7 @@ For ($teamId=1; $teamId -le $teamNum; $teamId++) {
         $serviceId = $teamId.ToString("00") + $id.ToString("00")
         $subExpand = Invoke-Expression "@`"`r`n$subtemplate`r`n`"@"
 
-        $endpoint = (Get-AzureKeyVaultSecret -VaultName ohkey -Name ("Team" + $teamId.ToString("00") + "-Endpoint" + $id.ToString("00"))).SecretValueText
+        $endpoint = (Get-AzureKeyVaultSecret -VaultName $ExternalKeyVaultName -Name ("Team" + $teamId.ToString("00") + "-Endpoint" + $id.ToString("00"))).SecretValueText
         # Write-Host $subexpand
         $services = -join($services, $subExpand)
         # Write-Host $services
