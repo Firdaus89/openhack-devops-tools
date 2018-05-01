@@ -5,21 +5,51 @@ Write-Output "* Generating a value.yaml for the sentinel helm..."
 Write-Output "**************************************************************************************************"
 
 $template = Get-Content '.\templates\template.txt' -Raw
-$subtemplate = Get-Content '.\templates\subtemplate.txt' -Raw
 
 $services = ""
 
-For ($teamId=1; $teamId -le $teamNum; $teamId++) {
-    For ($id=1; $id -le $servicesPerTeam; $id++){
-        $serviceId = $teamId.ToString("00") + $id.ToString("00")
-        $subExpand = Invoke-Expression "@`"`r`n$subtemplate`r`n`"@"
-
-        $endpoint = (Get-AzureKeyVaultSecret -VaultName $ExternalKeyVaultName -Name ("Team" + $teamId.ToString("00") + "-Endpoint" + $id.ToString("00"))).SecretValueText
-        # Write-Host $subexpand
-        $services = -join($services, $subExpand)
-        # Write-Host $services
+function Get-ObjectMembers {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory=$True, ValueFromPipeline=$True)]
+        [PSCustomObject]$obj
+    )
+    $obj | Get-Member -MemberType NoteProperty | ForEach-Object {
+        $key = $_.Name
+        [PSCustomObject]@{Key = $key; Value = $obj."$key"}
     }
 }
+
+function Get-SubService{
+
+    Param(
+        [String] $services, 
+        [int] $counter, 
+        [String] $teamId, 
+        [String] $endpoint, 
+        [int] $servicecount) 
+
+    $serviceId = $counter.ToString("00") + $servicecount.ToString("00")
+    $subtemplate = Get-Content '.\templates\subtemplate.txt' -Raw
+    $subExpand = Invoke-Expression "@`"`r`n$subtemplate`r`n`"@"
+    $services = -join($services, $subExpand)
+    return $services
+}
+
+
+$data = Get-Content '.\sample.json'` -Raw
+$json = ConvertFrom-Json($data)
+
+$counter = 1
+$services = ""
+$json | Get-ObjectMembers | foreach {
+    
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/aaa/healthcheck") -servicecount 1 
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/bbb/healthcheck") -servicecount 2 
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/ccc/healthcheck") -servicecount 3                               
+    $counter = $counter + 1
+}
+
 
 $expand = Invoke-Expression "@`"`r`n$template`r`n`"@"
 Write-Host $expand
@@ -27,8 +57,8 @@ Write-Host ""
 
 $expand | Out-File '..\..\sentinel\values.yaml' -Encoding UTF8
 
-Write-Host "..\..\sentinel\values.yaml has been generated"
-
-Set-AzureKeyVaultSecret -VaultName $ExternalKeyVaultName -Name 'helmValuesYaml' -SecretValue (ConvertTo-SecureString $expand -AsPlainText -Force)
-
-Write-Host "values.yaml is published to the Key Vault: " + $ExternalKeyVaultName
+# Write-Host "..\..\sentinel\values.yaml has been generated"
+# 
+# Set-AzureKeyVaultSecret -VaultName $ExternalKeyVaultName -Name 'helmValuesYaml' -SecretValue (ConvertTo-SecureString $expand -AsPlainText -Force)
+#
+# Write-Host "values.yaml is published to the Key Vault: " + $ExternalKeyVaultName
