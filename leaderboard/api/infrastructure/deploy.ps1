@@ -11,7 +11,10 @@ Param(
     [string] [parameter(Mandatory=$true)] $ACRName,
     [string] [parameter(Mandatory=$true)] $ProctorVMHostName,
     [string] [parameter(Mandatory=$true)] $AdminUser,
-    [string] [parameter(Mandatory=$true)] $AdminPassword
+    [string] [parameter(Mandatory=$true)] $AdminPassword,
+    [string] [parameter(Mandatory=$true)] $ExternalKeyVaultName,
+    [int] [Parameter(Mandatory=$true)] $teamNum,
+    [int] [Parameter(Mandatory=$true)] $servicesPerTeam
 )
 
 # NOTE: Since this script works on the VSTS, I skip the login script.
@@ -239,6 +242,42 @@ Write-Output "* Provisioning the Proctor VM..."
 Write-Output "**************************************************************************************************"
 
 $vmStorageName = $ProctorVMHostName + $random
-New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Location $Location -SkuName Standard_LRS -Kind Storage
+New-AzureRmStorageAccount -Name $vmStorageName -ResourceGroupName $ResourceGroupName -Location $Location -SkuName Standard_LRS -Kind Storage
 
 New-AzureRmResourceGroupDeployment -Name ProctorVMDeployment -ResourceGroup $ResourceGroupName -Templatefile .\scripts\proctor.json -StorageAccountName $vmStorageName -adminUsername $AdminUser -adminPassword $AdminPassword -dnsNameForPublicIP $ProctorVMHostName -ubuntuOSVersion "16.04.0-LTS"
+
+# Generate a value.yaml for sentinel helm
+
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Generating a value.yaml for the sentinel helm..."
+Write-Output "**************************************************************************************************"
+
+$template = Get-Content '.\templates\template.txt' -Raw
+$subtemplate = Get-Content '.\templates\subtemplate.txt' -Raw
+
+$services = ""
+
+For ($teamId=1; $teamId -le $teamNum; $teamId++) {
+    For ($id=1; $id -le $servicesPerTeam; $id++){
+        $serviceId = $teamId.ToString("00") + $id.ToString("00")
+        $subExpand = Invoke-Expression "@`"`r`n$subtemplate`r`n`"@"
+
+        $endpoint = (Get-AzureKeyVaultSecret -VaultName ohkey -Name ("Team" + $teamId.ToString("00") + "-Endpoint" + $id.ToString("00"))).SecretValueText
+        # Write-Host $subexpand
+        $services = -join($services, $subExpand)
+        # Write-Host $services
+    }
+}
+
+$expand = Invoke-Expression "@`"`r`n$template`r`n`"@"
+Write-Host $expand
+Write-Host ""
+
+$expand | Out-File '..\..\sentinel\values.yaml' -Encoding UTF8
+
+Write-Host "..\..\sentinel\values.yaml has been generated"
+
+Set-AzureKeyVaultSecret -VaultName $ExternalKeyVaultName -Name 'helmValuesYaml' -SecretValue (ConvertTo-SecureString $expand -AsPlainText -Force)
+
+Write-Host "values.yaml is published to the Key Vault: " + $ExternalKeyVaultName
