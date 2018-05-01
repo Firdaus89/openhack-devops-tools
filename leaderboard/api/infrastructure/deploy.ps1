@@ -242,9 +242,9 @@ Write-Output "* Provisioning the Proctor VM..."
 Write-Output "**************************************************************************************************"
 
 $vmStorageName = $ProctorVMHostName + $random
-New-AzureRmStorageAccount -Name $vmStorageName -ResourceGroupName $ResourceGroupName -Location $Location -SkuName Standard_LRS -Kind Storage
+New-AzureRmStorageAccount -Name $vmStorageName -ResourceGroupName $ResourceGroupName -Location $Location -SkuName Premium_LRS -Kind Storage
 
-New-AzureRmResourceGroupDeployment -Name ProctorVMDeployment -ResourceGroup $ResourceGroupName -Templatefile .\scripts\proctor.json -StorageAccountName $vmStorageName -adminUsername $AdminUser -adminPassword $AdminPassword -dnsNameForPublicIP $ProctorVMHostName -ubuntuOSVersion "16.04.0-LTS"
+New-AzureRmResourceGroupDeployment -Name "ProctorVMDeployment" -ResourceGroup $ResourceGroupName -Templatefile .\scripts\proctor.json -StorageAccountName $vmStorageName -adminUsername $AdminUser -adminPassword (ConvertTo-SecureString $AdminPassword -AsPlainText -Force) -dnsNameForPublicIP $ProctorVMHostName -ubuntuOSVersion "16.04.0-LTS"
 
 # Generate a value.yaml for sentinel helm
 
