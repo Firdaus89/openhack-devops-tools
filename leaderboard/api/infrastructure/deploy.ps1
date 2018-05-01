@@ -88,7 +88,7 @@ New-AzureRmResource -ResourceType "Microsoft.DocumentDb/databaseAccounts"`
 ## Retrive CosmosDB ConnectionString
 $cosmosPrimaryKey = Get-PrimaryKey -DocumentDBApi "2015-04-08" -ResourceGroupName $ResourceGroupName -CosmosdbAccountName $CosmosdbAccountName
 $cosmosDBConnectionString = "AccountEndpoint=https://" + $CosmosdbAccountName + ".documents.azure.com:443/;AccountKey=" + $cosmosPrimaryKey + ";"
-
+$cosmosDBEndpoint = "https://" + $CosmosdbAccountName + ".documents.azure.com:443/"
 # Create a Function App with Function App V2
 # This ARM temaplate create Azure Functions with a Service Principal to access the KeyVault.
 # Set AppSettings to the Function App
@@ -117,7 +117,7 @@ if(!$module)
 # compose KeyVault url
 $keyVaultUrl = "https://" + $KeyVaultName + ".vault.azure.net"
 
-New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosConnectionString $cosmosDBConnectionString -keyVaultUrl $keyVaultUrl
+New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosDBEndpoint $cosmosDBEndpoint -cosmosPrimaryKey $cosmosPrimaryKey -keyVaultUrl $keyVaultUrl
 
 # Get the Principal Id and Tenant Id
 

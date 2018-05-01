@@ -31,7 +31,10 @@
         "subscriptionId": {
             "type": "string"
         },
-        "cosmosConnectionString": {
+        "cosmosConcosmosDBEndpoint": {
+            "type": "string"
+        },
+        "cosmosPrimaryKey": {
             "type": "string"
         },
         "keyVaultUrl": {
@@ -71,8 +74,16 @@
                             "value": "[reference(resourceId('microsoft.insights/components/', parameters('functionName')), '2015-05-01').InstrumentationKey]"
                         },
                         {
-                            "name": "COSMOS_CONNECTION_STRING",
-                            "value": "[parameters('cosmosConnectionString')]"
+                            "name": "CosmosDBEndpointUri",
+                            "value": "[parameters('cosmosConcosmosDBEndpoint')]"
+                        },
+                        {
+                            "name": "CosmosDBPrimaryKey",
+                            "value": "[parameters('cosmosPrimaryKey')]"
+                        },
+                        {
+                            "name": "CosmosDBDatabaseId",
+                            "value": "leaderboard"
                         },
                         {
                             "name": "KEYVAULT_URL",
