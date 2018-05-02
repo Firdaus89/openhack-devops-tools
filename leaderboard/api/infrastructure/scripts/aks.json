@@ -92,6 +92,7 @@
               "dnsPrefix": "[variables('agentsEndpointDNSNamePrefix')]"
             }
           ],
+          "kubernetesVersion": "1.9.6",
           "linuxProfile": {
             "adminUsername": "[parameters('adminUsername')]",
             "ssh": {
