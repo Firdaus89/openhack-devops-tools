@@ -1,3 +1,7 @@
+Param(
+    [String] [parameter(Mandatory=$true)] $ResourceGroup,
+    [string] [parameter(Mandatory=$true)] $StorageAccountName
+    )
 # Generate a value.yaml for sentinel helm
 Write-Output ""
 Write-Output "**************************************************************************************************"
@@ -36,6 +40,26 @@ function Get-SubService{
     return $services
 }
 
+function Upload-ValuesFile{
+    Param(
+        [String] $storageAccountName,
+        [String] $resourceGroupName,
+        [String] $fileName
+        )
+
+        $storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName
+        $ctx = $storageAccount.Context
+        $containerName = "helm"
+        if (-not(Get-AzureStorageContainer -Context $sa.Context | Where-Object { $_.Name -eq $containerName}))  { 
+            New-AzureStorageContainer -Name $containerName -Context $storageAccount.Context -Permission blob
+        } 
+        Set-AzureStorageBlobContent -File $fileName `
+        -Container $containerName `
+        -Blob "values.yaml" `
+        -Context $storageAccount.Context
+
+}
+
 
 $data = Get-Content '.\sample.json'` -Raw
 $json = ConvertFrom-Json($data)
@@ -55,7 +79,13 @@ $expand = Invoke-Expression "@`"`r`n$template`r`n`"@"
 Write-Host $expand
 Write-Host ""
 
-$expand | Out-File '..\..\sentinel\chart\sentinel\values.yaml' -Encoding UTF8
+$fileName = '..\..\sentinel\chart\sentinel\values.yaml'
+
+$expand | Out-File $fileName -Encoding UTF8
+
+# Upload file to blob
+
+Upload-ValuesFile -storageAccountName $StorageAccountName -resourceGroupName $ResourceGroup -fileName $fileName
 
 # Write-Host "..\..\sentinel\values.yaml has been generated"
 # 
