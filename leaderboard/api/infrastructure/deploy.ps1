@@ -1,8 +1,10 @@
 Param(
     [string] [Parameter(Mandatory=$true)] $ResourceGroupName,
     [string] [Parameter(Mandatory=$true)] $Location,
+    [string] [Parameter(Mandatory=$true)] $EnvironmentHeader,
     [string] [Parameter(Mandatory=$true)] $CosmosdbAccountName,
     [string] [Parameter(Mandatory=$true)] $FunctionAppBaseName,
+    [string] [Parameter(Mandatory=$true)] $PackageUrl,
     [string] [parameter(Mandatory=$true)] $KeyVaultName,
     [string] [parameter(Mandatory=$true)] $ADAppName,
     [string] [parameter(Mandatory=$true)] $ADAppPass,
@@ -89,6 +91,21 @@ New-AzureRmResource -ResourceType "Microsoft.DocumentDb/databaseAccounts"`
 $cosmosPrimaryKey = Get-PrimaryKey -DocumentDBApi "2015-04-08" -ResourceGroupName $ResourceGroupName -CosmosdbAccountName $CosmosdbAccountName
 $cosmosDBConnectionString = "AccountEndpoint=https://" + $CosmosdbAccountName + ".documents.azure.com:443/;AccountKey=" + $cosmosPrimaryKey + ";"
 $cosmosDBEndpoint = "https://" + $CosmosdbAccountName + ".documents.azure.com:443/"
+
+# Storage Account for downloading function within the ARM template
+Write-Output ""
+Write-Output "**************************************************************************************************"
+Write-Output "* Provisioning Storage Account for donwloading contents ..."
+Write-Output "**************************************************************************************************"
+
+$random = Get-Random -minimum 1000000 -maximum 9999999;([String]$random).SubString(1,6)
+$storageName = $FunctionAppBaseName + $random
+
+$contentsStorageName = $EnvironmentHeader + $random
+
+$contentsStorage = New-AzureRmStorageAccount -ResourceGroupName $ResourceGroupName -Name $contentsStorageName -Location $Location -SkuName Standard_LRS
+
+
 # Create a Function App with Function App V2
 # This ARM temaplate create Azure Functions with a Service Principal to access the KeyVault.
 # Set AppSettings to the Function App
@@ -99,9 +116,6 @@ Write-Output "******************************************************************
 
 $currentSubscriptionId = (Get-AzureRmContext).Subscription.Id
 $hostingPlanName = $FunctionAppBaseName + "Plan"
-
-$random = Get-Random -minimum 1000000 -maximum 9999999;([String]$random).SubString(1,6)
-$storageName = $FunctionAppBaseName + $random
 
 # Install Newton to handle json
 # You need Admin Priviledge
@@ -117,7 +131,8 @@ if(!$module)
 # compose KeyVault url
 $keyVaultUrl = "https://" + $KeyVaultName + ".vault.azure.net"
 
-New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosDBEndpoint $cosmosDBEndpoint -cosmosPrimaryKey $cosmosPrimaryKey -keyVaultUrl $keyVaultUrl
+
+New-AzureRmResourceGroupDeployment -Name LeaderBoardBackendDeployment -ResourceGroup $ResourceGroupName -Templatefile scripts/template.json -functionName $FunctionAppBaseName -storageName $StorageName -hostingPlanName $hostingPlanName -location $Location -sku Standard -workerSize 0 -serverFarmResourceGroup $ResourceGroupName -skuCode "S1" -subscriptionId $currentSubscriptionId -cosmosDBEndpoint $cosmosDBEndpoint -cosmosPrimaryKey $cosmosPrimaryKey -keyVaultUrl $keyVaultUrl -packageUrl $PackageUrl
 
 # Get the Principal Id and Tenant Id
 
