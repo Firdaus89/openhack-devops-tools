@@ -1,57 +1,28 @@
-# Project Name
+# Open Hack tools - DevOps 
 
-(short, 1-3 sentenced, description of the project)
+This repository deploy whole Proctor environments for Open Hack - DevOps
+It includes code for Leaderboard
 
 ## Features
 
-This project framework provides the following features:
+Project structure 
 
-* Feature 1
-* Feature 2
-* ...
+Under the leaderboard subdirectory, you can find these directories.
 
-## Getting Started
+### api
 
-### Prerequisites
+* **Leaderboard**: BackendService of Leaderboard. This is the Azure Functions (v2) Project with Release Binary.
+* **infastructure**: PowerShell/ARM template scripts for deploying Proctor enviornment
 
-(ideally very short, if any)
+### sentinel
 
-- OS
-- Library version
-- ...
+* **sentinel**: Sentinel is the tool for watching team endpoints written by go
+* **helm chart**: helm chart which deploys the sentinel
 
-### Installation
+### web 
 
-(ideally very short)
+* **leaderboard**: SPA application for the leaderboard written by Angular 4 with Nebular
 
-- npm install [package name]
-- mvn install
-- ...
+## Detail
 
-### Quickstart
-(Add steps to get up and running quickly)
-
-1. git clone [repository clone url]
-2. cd [respository name]
-3. ...
-
-
-## Demo
-
-A demo app is included to show how to use the project.
-
-To run the demo, follow these steps:
-
-(Add steps to start up the demo)
-
-1.
-2.
-3.
-
-## Resources
-
-(Any additional resources or related projects)
-
-- Link to supporting information
-- Link to similar sample
-- ...
+You can refer the Readme.md on the each directories. 
