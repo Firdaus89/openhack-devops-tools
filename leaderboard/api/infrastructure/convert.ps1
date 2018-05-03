@@ -50,8 +50,8 @@ function Upload-ValuesFile{
         $storageAccount = Get-AzureRmStorageAccount -ResourceGroupName $resourceGroupName -Name $storageAccountName
         $ctx = $storageAccount.Context
         $containerName = "helm"
-        if (-not(Get-AzureStorageContainer -Context $sa.Context | Where-Object { $_.Name -eq $containerName}))  { 
-            New-AzureStorageContainer -Name $containerName -Context $storageAccount.Context -Permission blob
+        if (-not(Get-AzureStorageContainer -Context $storageAccount.Context | Where-Object { $_.Name -eq $containerName}))  { 
+            New-AzureStorageContainer -Name $containerName -Context $ctx -Permission blob
         } 
         Set-AzureStorageBlobContent -File $fileName `
         -Container $containerName `
@@ -68,9 +68,9 @@ $counter = 1
 $services = ""
 $json | Get-ObjectMembers | foreach {
     
-    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/aaa/healthcheck") -servicecount 1 
-    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/bbb/healthcheck") -servicecount 2 
-    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/ccc/healthcheck") -servicecount 3                               
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/api/healthcheck/user") -servicecount 1 
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/api/healthcheck/trips") -servicecount 2 
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/api/healthcheck/poi") -servicecount 3                               
     $counter = $counter + 1
 }
 
