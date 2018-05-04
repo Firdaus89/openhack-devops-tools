@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using System.IO;
 using Microsoft.Azure.Documents.Linq;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace CLI
 {
@@ -99,6 +100,62 @@ namespace CLI
             sw.Stop();
             Console.WriteLine($"---- Create Collection History {sw.ElapsedMilliseconds} msec");
 
+        }
+
+        /// <summary>
+        /// Create a seed data for Team, Services, History
+        /// </summary>
+        /// <returns></returns>
+        private async Task CreateDatabaseSeedsAsync()
+        {
+            // TODO Seeding of Challenge is missing. After finished the challenge, lets implement that.
+
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
+            var serviceConfigJson = System.IO.File.ReadAllText("services.json");
+            var serviceConfig = JObject.Parse(serviceConfigJson);
+            var teams = new Team[] { };
+            var tasks = new Task[] { };
+            var teamNum = 0;
+            foreach (var element in serviceConfig)
+            {
+                teamNum++;
+                var endpoint = element.Value.Value<JToken>("endpoint");
+                var newId = String.Format("{0:D2}", teamNum);
+                var team = new Team
+                {
+                    Id = newId,
+                    Name = element.Key,
+                    Score = 0
+                };
+                var services = new Service[]
+                {
+                    new Service
+                    {
+                        Id = $"{team.Id}01",
+                        Name = $"{team.Name}USER",
+                        Uri = $"{endpoint}/api/healthcheck/user"
+                    },
+                    new Service
+                    {
+                        Id = $"{team.Id}02",
+                        Name = $"{team.Name}TRIPS",
+                        Uri = $"{endpoint}/api/healthcheck/trips"
+                    },
+                    new Service
+                    {
+                        Id = $"{team.Id}03",
+                        Name = $"{team.Name}POI",
+                        Uri = $"{endpoint}/api/healthcheck/poi"
+                    }
+                };
+                var histories = new History[] { };
+                tasks.Append<Task>(createTeamServicesAndHistories(team, services, histories));
+            }
+            await Task.WhenAll(tasks);
+            sw.Stop();
+            Console.WriteLine($"---- Initial Documents({teamNum}) setup finished. {sw.ElapsedMilliseconds} msec");
         }
 
         private async Task CreateDocumentsAsync()
@@ -516,6 +573,9 @@ namespace CLI
                     sw.Stop();
                     Console.WriteLine($"---- Client Creation {sw.ElapsedMilliseconds} msec");
                     var p = new Program();
+                    p.InitializeAsync().Wait();
+                    p.CreateDatabaseSeedsAsync().Wait();
+                    // If you want to seed sample data, enable this.
                     // p.SampleDataSeeds().Wait();
                     p.QueryAsync().Wait();
                 }

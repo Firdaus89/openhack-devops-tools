@@ -31,27 +31,29 @@ namespace Leaderboard
                 // Get Downtime Report
            
                 var requestBody = new StreamReader(req.Body).ReadToEnd();
+                log.Info(requestBody);
                 var report = JsonConvert.DeserializeObject<DowntimeReport>(requestBody);
 
-                var targetService = await service.GetServiceAsync(report.ServiceId);
+                //var targetService = await service.GetServiceAsync(report.ServiceId);
 
-                // Service current status update. 
-                if (targetService.CurrentStatus != report.Status)
-                {
-                    await service.UpdateDocumentAsync<Service>(targetService);
-                }
+                //// Service current status update. 
+                //if (targetService.CurrentStatus != report.Status)
+                //{
+                //    await service.UpdateDocumentAsync<Service>(targetService);
+                //}
 
                 // If status is failure, it write history.
-                if (!report.Status)
-                {
+                //if (!report.Status)
+               // {
                     await service.CreateDocumentAsync<History>(report.GetHistory());
-                }
+               // }
                 return new OkObjectResult("{'status': 'accepted'}");
 
             }
             catch (Exception e)
             {
                 log.Error($"Report Status error: {e.Message}");
+                log.Error(e.StackTrace);
                 return new BadRequestObjectResult("{'status': 'error', 'message': '{" + e.Message + "'}");
             }
         }

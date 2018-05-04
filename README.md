@@ -3,9 +3,7 @@
 This repository deploy whole Proctor environments for Open Hack - DevOps
 It includes code for Leaderboard
 
-## Features
-
-Project structure 
+## Project structure
 
 Under the leaderboard subdirectory, you can find these directories.
 
