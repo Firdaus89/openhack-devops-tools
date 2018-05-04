@@ -22,6 +22,6 @@ COPY --from=build /sentinel/src/github.com/Azure-Samples/openhack-devops-tools/s
 # For more detail, ldd /app/sentinel might help.
 # This happens when I use build image as golang:1.10 (not alpine)
 # RUN mkdir /lib64 && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2
-# ENTRYPOINT ["/app/sentinel"]
+ENTRYPOINT ["/app/sentinel"]
 
 

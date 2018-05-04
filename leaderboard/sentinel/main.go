@@ -97,9 +97,14 @@ func printAPIErrorMessage(cfg *config, err error, res *http.Response, log *Log) 
 }
 
 func getBody(resp *http.Response) (string, error) {
-	defer resp.Body.Close()
-	body, err := ioutil.ReadAll(resp.Body)
-	return string(body), err
+	if resp.Body != nil {
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		return string(body), err
+	} else {
+		// In case of 404, the body doesn't exist.
+		return "", nil
+	}
 }
 
 func report(cfg *config, log *Log) (*http.Response, error) {
