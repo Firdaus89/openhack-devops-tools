@@ -18,6 +18,7 @@ namespace CLI
         private static string EndpointUri;
         private static string PrimaryKey;
         private static string DatabaseId;
+        private static int NumberOfChallenges;
         private static DocumentClient client;
 
         private static IConfigurationRoot Configuration { get; set; }
@@ -29,7 +30,7 @@ namespace CLI
             EndpointUri = Configuration["EndpointUri"];
             PrimaryKey = Configuration["PrimaryKey"];
             DatabaseId = Configuration["DatabaseId"];
-
+            NumberOfChallenges = int.Parse(Configuration["NumberOfChallenges"]);
         }
 
         private async Task SampleDataSeeds()
@@ -116,7 +117,7 @@ namespace CLI
             var serviceConfigJson = System.IO.File.ReadAllText("services.json");
             var serviceConfig = JObject.Parse(serviceConfigJson);
             var teams = new Team[] { };
-            var tasks = new Task[] { };
+            var tasks = new List<Task>();
             var teamNum = 0;
             foreach (var element in serviceConfig)
             {
@@ -127,7 +128,9 @@ namespace CLI
                 {
                     Id = newId,
                     Name = element.Key,
-                    Score = 0
+                    Challenges = GetInitialChallenges(),
+                    ServiceId = new string[] { $"{newId}01", $"{newId}02", $"{newId}03" },
+                    Score = 0                
                 };
                 var services = new Service[]
                 {
@@ -151,7 +154,7 @@ namespace CLI
                     }
                 };
                 var histories = new History[] { };
-                tasks.Append<Task>(createTeamServicesAndHistories(team, services, histories));
+                tasks.Add(createTeamServicesAndHistories(team, services, histories));
             }
             await Task.WhenAll(tasks);
             sw.Stop();
@@ -164,7 +167,7 @@ namespace CLI
             sw.Start();
 
             var teams = new Team[] { };
-            var tasks = new Task[] { };
+            var tasks = new Task[20];
             var flag = 0;
             for (var i = 0; i < 20; i++)
             {
@@ -179,7 +182,7 @@ namespace CLI
                 {
                     team.Score = 20;
                     var (aTeam, services, histories) = generatePattern01(team);
-                    tasks.Append<Task>(createTeamServicesAndHistories(aTeam, services, histories));
+                    tasks[i] = createTeamServicesAndHistories(aTeam, services, histories);
                     flag++;
 
                 }
@@ -187,20 +190,42 @@ namespace CLI
                 {
                     team.Score = 50;
                     var (aTeam, services, histories) = generatePattern02(team);
-                    tasks.Append<Task>(createTeamServicesAndHistories(aTeam, services, histories));
+                    tasks[i] = createTeamServicesAndHistories(aTeam, services, histories);
                     flag++;
                 }
                 else
                 {
                     team.Score = 10;
                     var (aTeam, services, histories) = generatePattern03(team);
-                    tasks.Append<Task>(createTeamServicesAndHistories(aTeam, services, histories));
+                    tasks[i] = createTeamServicesAndHistories(aTeam, services, histories);
                     flag = 0;
                 }
             }
             await Task.WhenAll(tasks);
             sw.Stop();
             Console.WriteLine($"---- Create All Documents {sw.ElapsedMilliseconds} msec");
+        }
+
+        private Challenge[] inititalChallenges;
+
+        private Challenge[] GetInitialChallenges()
+        {
+            if (inititalChallenges != null) return inititalChallenges;
+
+            this.inititalChallenges = new Challenge[NumberOfChallenges];
+
+            for (int i = 0; i < NumberOfChallenges; i++)
+            {
+                var newId = String.Format("{0:D2}", i);
+                var challenge = new Challenge
+                {
+                    Id = newId,
+                    Status = ChallengeStatus.NotStarted.ToString()
+                };
+                this.inititalChallenges[i] = challenge;
+            }
+
+            return inititalChallenges;
         }
         private async Task QueryAsync()
         {
