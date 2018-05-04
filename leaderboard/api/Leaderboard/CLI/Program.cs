@@ -109,7 +109,6 @@ namespace CLI
         /// <returns></returns>
         private async Task CreateDatabaseSeedsAsync()
         {
-            // TODO Seeding of Challenge is missing. After finished the challenge, lets implement that.
 
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();

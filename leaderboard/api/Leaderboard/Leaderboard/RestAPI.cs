@@ -34,18 +34,19 @@ namespace Leaderboard
                 log.Info(requestBody);
                 var report = JsonConvert.DeserializeObject<DowntimeReport>(requestBody);
 
-                //var targetService = await service.GetServiceAsync(report.ServiceId);
+                var targetService = await service.GetServiceAsync(report.ServiceId);
 
                 //// Service current status update. 
-                //if (targetService.CurrentStatus != report.Status)
-                //{
-                //    await service.UpdateDocumentAsync<Service>(targetService);
-                //}
+                if (targetService.CurrentStatus != report.Status)
+                {
+                    await service.UpdateDocumentAsync<Service>(targetService);
+                }
 
-                // If status is failure, it write history.
+                // If status is failure, it write history. If you want to limit the number of inserting data, enable this.
+                // Currently, I dump all data to the History collection.
                 //if (!report.Status)
-               // {
-                    await service.CreateDocumentAsync<History>(report.GetHistory());
+                // {
+                await service.CreateDocumentAsync<History>(report.GetHistory());
                // }
                 return new OkObjectResult("{'status': 'accepted'}");
 
