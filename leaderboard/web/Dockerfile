@@ -7,4 +7,4 @@ COPY package.json package.json
 RUN npm install --silent
 RUN apk add --no-cache curl
 EXPOSE 4200
-CMD ["/usr/local/bin/npm", "start"]
+CMD ["/usr/local/bin/ng", "serve", "-e prod"]
