@@ -1,4 +1,7 @@
-FROM node:8.9-alpine
+FROM nginx:1.13.12-alpine AS base
+WORKDIR /app
+
+FROM node:8.9-alpine AS build
 WORKDIR /usr/src/app
 RUN npm i -g @angular/cli
 COPY . .
@@ -6,5 +9,10 @@ RUN rm -rf node_modules
 COPY package.json package.json
 RUN npm install --silent
 RUN apk add --no-cache curl
-EXPOSE 4200
-CMD ["/usr/local/bin/ng", "serve", "-e prod"]
+RUN ng build -e prod
+
+FROM base AS final
+WORKDIR /app
+RUN rm -rf /usr/share/nginx/html
+COPY --from=build /usr/src/app/dist /usr/share/nginx/html
+
