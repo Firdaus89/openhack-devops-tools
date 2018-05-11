@@ -19,6 +19,12 @@ Param(
     [int] [Parameter(Mandatory=$true)] $servicesPerTeam
 )
 
+
+# Register services
+
+Register-AzureRmResourceProvider -ProviderNamespace Microsoft.DocumentDB
+Register-AzureRmResourceProvider -ProviderNamespace Microsoft.ContainerRegistry
+
 # NOTE: Since this script works on the VSTS, I skip the login script.
 # Login-AzureRmAccount
 
@@ -42,6 +48,8 @@ Write-Output ""
 Write-Output "**************************************************************************************************"
 Write-Output "* Creating a CosmosDB..."
 Write-Output "**************************************************************************************************"
+
+
 
 Function Get-PrimaryKey
 {

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using System.IO;
 using Microsoft.Azure.Documents.Linq;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace CLI
 {
@@ -17,6 +18,7 @@ namespace CLI
         private static string EndpointUri;
         private static string PrimaryKey;
         private static string DatabaseId;
+        private static int NumberOfChallenges;
         private static DocumentClient client;
 
         private static IConfigurationRoot Configuration { get; set; }
@@ -28,7 +30,7 @@ namespace CLI
             EndpointUri = Configuration["EndpointUri"];
             PrimaryKey = Configuration["PrimaryKey"];
             DatabaseId = Configuration["DatabaseId"];
-
+            NumberOfChallenges = int.Parse(Configuration["NumberOfChallenges"]);
         }
 
         private async Task SampleDataSeeds()
@@ -101,13 +103,70 @@ namespace CLI
 
         }
 
+        /// <summary>
+        /// Create a seed data for Team, Services, History
+        /// </summary>
+        /// <returns></returns>
+        private async Task CreateDatabaseSeedsAsync()
+        {
+
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+
+            var serviceConfigJson = System.IO.File.ReadAllText("services.json");
+            var serviceConfig = JObject.Parse(serviceConfigJson);
+            var teams = new Team[] { };
+            var tasks = new List<Task>();
+            var teamNum = 0;
+            foreach (var element in serviceConfig)
+            {
+                teamNum++;
+                var endpoint = element.Value.Value<JToken>("endpoint");
+                var newId = String.Format("{0:D2}", teamNum);
+                var team = new Team
+                {
+                    Id = newId,
+                    Name = element.Key,
+                    Challenges = GetInitialChallenges(),
+                    ServiceId = new string[] { $"{newId}01", $"{newId}02", $"{newId}03" },
+                    Score = 0                
+                };
+                var services = new Service[]
+                {
+                    new Service
+                    {
+                        Id = $"{team.Id}01",
+                        Name = $"{team.Name}USER",
+                        Uri = $"{endpoint}/api/healthcheck/user"
+                    },
+                    new Service
+                    {
+                        Id = $"{team.Id}02",
+                        Name = $"{team.Name}TRIPS",
+                        Uri = $"{endpoint}/api/healthcheck/trips"
+                    },
+                    new Service
+                    {
+                        Id = $"{team.Id}03",
+                        Name = $"{team.Name}POI",
+                        Uri = $"{endpoint}/api/healthcheck/poi"
+                    }
+                };
+                var histories = new History[] { };
+                tasks.Add(createTeamServicesAndHistories(team, services, histories));
+            }
+            await Task.WhenAll(tasks);
+            sw.Stop();
+            Console.WriteLine($"---- Initial Documents({teamNum}) setup finished. {sw.ElapsedMilliseconds} msec");
+        }
+
         private async Task CreateDocumentsAsync()
         {
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
 
             var teams = new Team[] { };
-            var tasks = new Task[] { };
+            var tasks = new Task[20];
             var flag = 0;
             for (var i = 0; i < 20; i++)
             {
@@ -122,7 +181,7 @@ namespace CLI
                 {
                     team.Score = 20;
                     var (aTeam, services, histories) = generatePattern01(team);
-                    tasks.Append<Task>(createTeamServicesAndHistories(aTeam, services, histories));
+                    tasks[i] = createTeamServicesAndHistories(aTeam, services, histories);
                     flag++;
 
                 }
@@ -130,20 +189,42 @@ namespace CLI
                 {
                     team.Score = 50;
                     var (aTeam, services, histories) = generatePattern02(team);
-                    tasks.Append<Task>(createTeamServicesAndHistories(aTeam, services, histories));
+                    tasks[i] = createTeamServicesAndHistories(aTeam, services, histories);
                     flag++;
                 }
                 else
                 {
                     team.Score = 10;
                     var (aTeam, services, histories) = generatePattern03(team);
-                    tasks.Append<Task>(createTeamServicesAndHistories(aTeam, services, histories));
+                    tasks[i] = createTeamServicesAndHistories(aTeam, services, histories);
                     flag = 0;
                 }
             }
             await Task.WhenAll(tasks);
             sw.Stop();
             Console.WriteLine($"---- Create All Documents {sw.ElapsedMilliseconds} msec");
+        }
+
+        private Challenge[] inititalChallenges;
+
+        private Challenge[] GetInitialChallenges()
+        {
+            if (inititalChallenges != null) return inititalChallenges;
+
+            this.inititalChallenges = new Challenge[NumberOfChallenges];
+
+            for (int i = 0; i < NumberOfChallenges; i++)
+            {
+                var newId = String.Format("{0:D2}", i);
+                var challenge = new Challenge
+                {
+                    Id = newId,
+                    Status = ChallengeStatus.NotStarted.ToString()
+                };
+                this.inititalChallenges[i] = challenge;
+            }
+
+            return inititalChallenges;
         }
         private async Task QueryAsync()
         {
@@ -516,6 +597,9 @@ namespace CLI
                     sw.Stop();
                     Console.WriteLine($"---- Client Creation {sw.ElapsedMilliseconds} msec");
                     var p = new Program();
+                    p.InitializeAsync().Wait();
+                    p.CreateDatabaseSeedsAsync().Wait();
+                    // If you want to seed sample data, enable this.
                     // p.SampleDataSeeds().Wait();
                     p.QueryAsync().Wait();
                 }

@@ -25,6 +25,15 @@ namespace Models
         public DateTime EndDate { get; set; }
         public string Status { get; set; }
     }
+
+    public enum ChallengeStatus
+    {
+        NotStarted,
+        Started,
+        Completed
+    }
+
+
     public class Service : IDocument
     {
         [JsonProperty(PropertyName = "id")]

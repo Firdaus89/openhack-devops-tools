@@ -68,9 +68,9 @@ $counter = 1
 $services = ""
 $json | Get-ObjectMembers | foreach {
     
-    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/aaa/healthcheck") -servicecount 1 
-    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/bbb/healthcheck") -servicecount 2 
-    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint01 + "/ccc/healthcheck") -servicecount 3                               
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint + "/api/healthcheck/user") -servicecount 1 
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint + "/api/healthcheck/trips") -servicecount 2 
+    $services = Get-SubService -services $services  -counter $counter -teamId $_.Key -endpoint  ($_.Value.endpoint + "/api/healthcheck/poi") -servicecount 3                               
     $counter = $counter + 1
 }
 
